@@ -1,0 +1,6 @@
+---
+services:
+  - mysqld
+  - named
+  - httpd
+  - postgresql

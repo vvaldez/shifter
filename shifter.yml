@@ -1,0 +1,14 @@
+---
+- name: Profile source hosts
+  hosts: source
+  gather_facts: true
+  roles:
+    - role: introspection
+
+- name: Lift and shift application to target container host
+  hosts: destination
+  tasks:
+    - name: Create destination container
+      include_role:
+        name: containerize
+      with_items: "{{ hostvars['localhost'].groups['source'] }} "

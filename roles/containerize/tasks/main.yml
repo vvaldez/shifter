@@ -1,0 +1,47 @@
+---
+# tasks file for containerize
+- debug:
+    var: hostvars[item].services_to_enable
+
+- name: Exit if no services were detected
+  fail:
+    msg: "No services were detected running on the source host of {{ item }}. Nothing to do."
+  when: hostvars[item].services_to_enable is undefined or hostvars[item].services_to_enable is none or hostvars[item].services_to_enable|trim == '' or hostvars[item].services_to_enable == []
+
+- name: Set container version
+  set_fact:
+    os_major_version: "{{ hostvars[item].ansible_distribution_major_version }} "
+
+- name: Set container name
+  set_fact:
+    container_name: "{{ 'from_' + item }} "
+    #container_name: "{{ 'rhel' + os_major_version + 'from_' + item }} "
+
+- name: Append used services
+  set_fact:
+    container_name: "{{ [service_name,container_name | default('')] | join('_') }}"
+  with_items: "{{ hostvars[item].services_to_enable }}"
+  loop_control:
+    loop_var: service_name
+
+- debug:
+    var: container_name
+
+#- name: Build Docker container
+#  docker_container: 
+#    name: "{{ container_name }}"
+#    image: "centos:{{ hostvars[inventory_hostname].ansible_distribution_major_version }}"
+#    state: present
+
+- name: Copy template Dockerfile
+  template:
+    src: Dockerfile.j2
+    dest: /tmp/Dockerfile
+
+- name: Create container on destination host
+  command: docker build -t {{ container_name }} /tmp/
+  register: docker_build
+
+- name: Run new container
+  command: atomic run {{ container_name }}
+  register: atomic_run

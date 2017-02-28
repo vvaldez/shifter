@@ -1,0 +1,35 @@
+---
+# tasks file for introspection
+- name: Check for running services
+  command: service {{ service }} status
+  with_items: "{{ services }}"
+  register: services_status
+  ignore_errors: yes
+  loop_control:
+    loop_var: service
+
+- name: Determine running services
+  debug:
+    msg: "Service {{ result.service }} found enabled"
+    verbosity: 1
+  with_items: "{{ services_status.results }}"
+  when: not result.failed | default(None)
+  loop_control:
+    loop_var: result
+
+- name: Initialize list of services to enable
+  set_fact:
+    services_to_enable: []
+
+- name: Create list with services to enable
+  set_fact:
+    services_to_enable: "{{ services_to_enable }} + [ '{{ result.service }}' ]"
+  with_items: "{{ services_status.results }}"
+  when: not result.failed | default(None)
+  loop_control:
+    loop_var: result
+
+- debug:
+    var: services_to_enable
+
+# To do - other introspection such as rpm -V or commonly known config files
