@@ -29,6 +29,11 @@
   loop_control:
     loop_var: result
 
+- name: Exit if no services were detected
+  fail:
+    msg: "No services were detected running on the source host of {{ inventory_hostname }}. Nothing to do."
+  when: services_to_enable == []
+
 - debug:
     var: services_to_enable
 

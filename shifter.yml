@@ -6,13 +6,6 @@
 
 - name: Lift and shift application to target container host
   hosts: destination
-  tasks:
-    - name: Create destination container
-      include_role:
-        name: containerize
-      with_items: "{{ hostvars['localhost'].groups['source'] }} "
-
-    - name: Migrate application
-      include_role:
-        name: lift_and_shift
-      with_items: "{{ hostvars['localhost'].groups['source'] }} "
+  roles:
+    - role: containerize
+    - role: lift_and_shift

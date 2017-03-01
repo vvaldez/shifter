@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/{{ os_version }}{{ os_major_version }}
+FROM registry.access.redhat.com/{{ os_name }}{{ os_major_version }}
 MAINTAINER Vinny Valdez <vvaldez@redhat.com>
 RUN yum -y install openssh-server httpd mysqld-server &&\
   sed -i 's/^#Port 22/Port 2222/g' /etc/ssh/sshd_config &&\

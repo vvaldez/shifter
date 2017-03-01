@@ -1,0 +1,48 @@
+---
+- name: Check docker config for remote listening option
+  command: 'awk /"^OPTIONS=.*-H {{ inventory_hostname }}:{{ docker_port }}"/ /etc/sysconfig/docker'
+  register: check_config
+
+- name: Set docker configuration fact if found 
+  set_fact:
+    docker_remote_configured: true
+  when:
+    - "'-H {{ inventory_hostname }}:{{ docker_port }}' in check_config.stdout"
+
+- name: Configure remote Docker port
+  lineinfile:
+    dest: /etc/sysconfig/docker
+    regexp: "^OPTIONS='(.*)'$"
+    line: "OPTIONS='\\1 -H {{ inventory_hostname }}:{{ docker_port }} -H unix:///var/run/docker.sock'"
+    backrefs: yes
+  when:
+    - docker_configure_remote | default(False)
+    - not docker_remote_configured | default(False)
+
+- name: Restart Docker service
+  service:
+    name: docker
+    state: restarted
+  when:
+    - docker_configure_remote | default(False)
+    - not docker_remote_configured | default(False)
+ 
+- name: Pull and build docker image
+  docker_image: 
+    name: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}"
+    state: present
+    docker_host: "tcp://{{ inventory_hostname }}:{{ docker_port }}"
+    path: "/tmp/"
+ 
+- name: Start docker container
+  docker_container: 
+    name: "{{ container_name }}"
+    image: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}"
+    recreate: yes
+    state: started
+    docker_host: "tcp://{{ inventory_hostname }}:{{ docker_port }}"
+    detach: true
+    interactive: true
+    #    networks:
+    #  - name: host
+    privileged: true
