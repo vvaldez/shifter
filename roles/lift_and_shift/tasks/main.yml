@@ -1,2 +1,9 @@
 ---
 # tasks file for lift_and_shift
+- debug:
+    var: hostvars[item].services_to_enable
+
+- name: Exit if no services were detected
+  fail:
+    msg: "No services were detected running on the source host of {{ item }}. Nothing to do."
+  when: hostvars[item].services_to_enable is undefined or hostvars[item].services_to_enable is none or hostvars[item].services_to_enable|trim == '' or hostvars[item].services_to_enable == []

@@ -10,38 +10,112 @@
 
 - name: Set container version
   set_fact:
-    os_major_version: "{{ hostvars[item].ansible_distribution_major_version }} "
+    os_major_version: "{{ hostvars[item].ansible_distribution_major_version }}"
+    #os_major_version: "{{ hostvars[item].ansible_distribution_major_version | regex_replace(' ', '') }}"
+
+- name: Set OS name to rhel
+  set_fact:
+    os_name: "rhel"
+  when: "'RedHat' in '{{ hostvars[item].ansible_distribution }}'"
+
+- name: Set OS name to centos
+  set_fact:
+    os_name: "centos"
+  when: "'CenOS' in '{{ hostvars[item].ansible_distribution }}'"
+
+- name: Set OS name to fedora
+  set_fact:
+    os_name: "fedora"
+  when: "'Fedora' in '{{ hostvars[item].ansible_distribution }}'"
 
 - name: Set container name
   set_fact:
-    container_name: "{{ 'from_' + item }} "
-    #container_name: "{{ 'rhel' + os_major_version + 'from_' + item }} "
+    container_name: "{{ 'shifted_from_' + item }}"
 
-- name: Append used services
+- name: Prepend used services
   set_fact:
     container_name: "{{ [service_name,container_name | default('')] | join('_') }}"
   with_items: "{{ hostvars[item].services_to_enable }}"
   loop_control:
     loop_var: service_name
 
+- name: Prepend OS name and version
+  set_fact:
+    container_name: "{{ os_name + os_major_version + '_' + container_name }}"
+
 - debug:
     var: container_name
-
-#- name: Build Docker container
-#  docker_container: 
-#    name: "{{ container_name }}"
-#    image: "centos:{{ hostvars[inventory_hostname].ansible_distribution_major_version }}"
-#    state: present
 
 - name: Copy template Dockerfile
   template:
     src: Dockerfile.j2
     dest: /tmp/Dockerfile
+  when: not docker_use_remote
 
 - name: Create container on destination host
   command: docker build -t {{ container_name }} /tmp/
   register: docker_build
+  when: not docker_use_remote
 
 - name: Run new container
   command: atomic run {{ container_name }}
   register: atomic_run
+  when: not docker_use_remote
+
+- name: Check docker config for remote listening option
+  command: 'awk /"^OPTIONS=.*-H {{ inventory_hostname }}:{{ docker_port }}"/ /etc/sysconfig/docker'
+  register: check_config
+
+- name: Set docker configuration fact if found 
+  set_fact:
+    docker_remote_configured: true
+  when: "'-H {{ inventory_hostname }}:{{ docker_port }}' in check_config.stdout"
+
+- name: Configure remote Docker port
+  lineinfile:
+    dest: /etc/sysconfig/docker
+    regexp: "^OPTIONS='(.*)'$"
+    line: "OPTIONS='\\1 -H {{ inventory_hostname }}:{{ docker_port }} -H unix:///var/run/docker.sock'"
+    backrefs: yes
+  when:
+    - docker_configure_remote | default(False)
+    - not docker_remote_configured | default(False)
+    - docker_use_remote
+
+- name: Restart Docker service
+  service:
+    name: docker
+    state: restarted
+  when:
+    - docker_configure_remote | default(False)
+    - not docker_remote_configured | default(False)
+    - docker_use_remote
+ 
+- name: Copy template Dockerfile
+  template:
+    src: Dockerfile.j2
+    dest: /tmp/Dockerfile
+  when: docker_use_remote
+    #  delegate_to: localhost
+
+- name: Pull and build docker image
+  docker_image: 
+    name: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}"
+    state: present
+    docker_host: "tcp://{{ inventory_hostname }}:{{ docker_port }}"
+    path: "/tmp/"
+  when: docker_use_remote
+ 
+- name: Start docker container
+  docker_container: 
+    name: "{{ container_name }}"
+    image: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}"
+    recreate: yes
+    state: started
+    docker_host: "tcp://{{ inventory_hostname }}:{{ docker_port }}"
+    detach: true
+    interactive: true
+    #    networks:
+    #  - name: host
+    privileged: true
+  when: docker_use_remote

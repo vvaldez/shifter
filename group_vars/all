@@ -1,5 +1,9 @@
 ---
-services:
+docker_port: 2375
+docker_configure_remote: true
+docker_use_remote: true
+image_registry: "registry.access.redhat.com"
+services_to_check:
   - mysqld
   - named
   - httpd
