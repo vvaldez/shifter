@@ -29,6 +29,7 @@
  
 - name: Pull and build docker image
   docker_image: 
+  #name: "{{ os_name }}{{ os_major_version }}"
     name: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}"
     repository: "{{ image_registry }}"
     state: present

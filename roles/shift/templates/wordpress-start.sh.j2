@@ -27,13 +27,10 @@ sleep 10
 
 __handle_passwords() {
 # Here we generate random passwords (thank you pwgen!). The first two are for mysql users, the last batch for random keys in wp-config.php
-#WORDPRESS_DB="wordpress"
-WORDPRESS_DB="wp"
-#WORDPRESS_DB="wordpress"
-MYSQL_PASSWORD="shifter"
-#MYSQL_PASSWORD=`pwgen -c -n -1 12`
+WORDPRESS_USER="wp"
 WORDPRESS_PASSWORD="shifter"
-#WORDPRESS_PASSWORD=`pwgen -c -n -1 12`
+WORDPRESS_DB="wp"
+MYSQL_PASSWORD="shifter"
 # This is so the passwords show up in logs. 
 echo mysql root password: $MYSQL_PASSWORD
 echo wordpress password: $WORDPRESS_PASSWORD
@@ -53,17 +50,18 @@ echo $WORDPRESS_PASSWORD > /wordpress-db-pw.txt
 #/'SECURE_AUTH_SALT'/s/put your unique phrase here/`pwgen -c -n -1 65`/
 #/'LOGGED_IN_SALT'/s/put your unique phrase here/`pwgen -c -n -1 65`/
 #/'NONCE_SALT'/s/put your unique phrase here/`pwgen -c -n -1 65`/" /var/www/html/wp-config-sample.php > /var/www/html/wp-config.php
-mysql -u root -p$MYSQL_PASSWORD < /{{ hostvars[source_host].profile }}-{{ source_host }}.sql
 }
 
-__httpd_perms() {
-chown apache:apache /var/www/html/wp-config.php
+__httpd_config() {
+chown -R apache:apache /var/www/html/
+tar zxf /tmp/{{ hostvars[source_host].profile }}-{{ source_host }}.tar.gz/{{ source_host }}/tmp/{{ hostvars[source_host].profile }}-{{ source_host }}.tar.gz -C /var/www/html/
 }
 
 __start_mysql() {
 # systemctl start mysqld.service
-#mysqladmin -u root password $MYSQL_PASSWORD 
-#mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE wordpress; GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpress'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'; FLUSH PRIVILEGES;"
+mysqladmin -u root password $MYSQL_PASSWORD 
+mysql -u root -p$MYSQL_PASSWORD < /tmp/{{ hostvars[source_host].profile }}-{{ source_host }}.sql/{{ source_host }}/tmp/{{ hostvars[source_host].profile }}-{{ source_host }}.sql
+mysql -u root -p$MYSQL_PASSWORD -e "FLUSH PRIVILEGES; GRANT ALL PRIVILEGES ON $WORDPRESS_DB.* TO '$WORDPRESS_USER'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'; FLUSH PRIVILEGES;"
 killall mysqld
 sleep 10
 }
@@ -77,6 +75,6 @@ __check
 __create_user
 __mysql_config
 __handle_passwords
-__httpd_perms
+__httpd_config
 __start_mysql
 __run_supervisor
