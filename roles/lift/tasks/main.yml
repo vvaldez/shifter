@@ -1,0 +1,11 @@
+---
+# tasks file for lift
+- debug:
+    var: "{{ item }}"
+  with_items: 
+    - services_to_enable
+    - profile
+
+- name: Prep for lifting of application
+  include: lift.yml
+  when: services_to_enable != []

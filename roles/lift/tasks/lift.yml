@@ -1,0 +1,10 @@
+---
+- name: Call tasks for wordpress lift
+  include: wordpress.yml
+  when: "'{{ profile }}' == 'wordpress'"
+
+- name: Call tasks for bind lift
+  include: bind.yml
+  when: "'{{ profile }}' == 'bind'"
+
+# other tasks for additional apps ...

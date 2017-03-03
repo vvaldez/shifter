@@ -1,0 +1,16 @@
+---
+- name: Run relevant profile tasks for wordpress
+  include: wordpress.yml
+  when: "'{{ hostvars[source_host].profile }}' == 'wordpress'"
+
+- name: Run relevant profile tasks for bind
+  include: bind.yml
+  when: "'{{ hostvars[source_host].profile }}' == 'bind'"
+
+- name: Create container using command module
+  include: with_command.yml
+  when: not docker_use_remote
+
+- name: Create container using docker_container module
+  include: with_docker_container.yml
+  when: docker_use_remote

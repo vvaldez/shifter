@@ -2,10 +2,10 @@
 - name: Profile source hosts
   hosts: source
   roles:
-    - role: introspection
+    - { role: introspect, when: perform_introspection | default (True) }
+    - role: lift
 
-- name: Lift and shift application to target container host
+- name: Build container and migrate application to target container host
   hosts: destination
   roles:
-    - role: containerize
-    - role: lift_and_shift
+    - role: shift

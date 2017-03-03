@@ -1,0 +1,32 @@
+# "ported" by Adam Miller <maxamillion@fedoraproject.org> from
+#   https://github.com/fedora-cloud/Fedora-Dockerfiles
+#
+# Originally written for Fedora-Dockerfiles by
+#   scollier <scollier@redhat.com>
+
+FROM registry.access.redhat.com/{{ os_name }}{{ os_major_version }}
+MAINTAINER {{ maintainer_name }} <{{ maintainer_email }}>
+
+RUN yum -y update; yum clean all
+RUN yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{  hostvars[source_host].ansible_distribution_major_version }}.noarch.rpm; yum clean all
+RUN yum -y install httpd php php-mysql php-gd pwgen supervisor bash-completion openssh-server psmisc tar; yum clean all
+ADD ./start.sh /start.sh
+ADD ./foreground.sh /etc/apache2/foreground.sh
+ADD ./supervisord.conf /etc/supervisord.conf
+ADD ./{{ hostvars[source_host].profile }}-{{ source_host }}.tar.gz /tmp/.
+ADD ./{{ hostvars[source_host].profile }}-{{ source_host }}.sql /tmp/.
+RUN echo %sudo	ALL=NOPASSWD: ALL >> /etc/sudoers
+#ADD http://wordpress.org/latest.tar.gz /wordpress.tar.gz
+
+# Add -C and strip-components to work around AUFS limitation for boot2docker
+#RUN tar xvzf /wordpress.tar.gz -C /var/www/html --strip-components=1
+#RUN mv /wordpress/* /var/www/html/.
+RUN chown -R apache:apache /var/www/
+RUN chmod 755 /start.sh
+RUN chmod 755 /etc/apache2/foreground.sh
+RUN mkdir /var/run/sshd
+
+EXPOSE 80
+EXPOSE 22
+
+CMD ["/bin/bash", "/start.sh"]

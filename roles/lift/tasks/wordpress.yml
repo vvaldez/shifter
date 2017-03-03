@@ -1,0 +1,6 @@
+---
+- name: Lift httpd data
+  include: httpd.yml
+
+- name: Lift mysqld database
+  include: mysqld.yml

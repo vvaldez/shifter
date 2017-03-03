@@ -1,0 +1,10 @@
+---
+- name: Copy {{ profile }} directory
+  command: tar cvzf /tmp/{{ profile }}-{{ inventory_hostname }}.tar.gz .
+  args:
+    chdir: "/var/www/html/"
+
+- name: Fetch {{ profile }} tarball
+  fetch:
+    src: /tmp/{{ profile }}-{{ inventory_hostname }}.tar.gz
+    dest: /tmp/{{ profile }}-{{ inventory_hostname }}.tar.gz

@@ -1,0 +1,22 @@
+---
+- debug:
+    var: hostvars['{{ item }}'].services_to_enable
+  with_items: "{{ groups['source'] }}"
+
+- debug:
+    var: hostvars['{{ item }}'].profile
+  with_items: "{{ groups['source'] }}"
+
+- name: Prep for containerization shift
+  include: prep.yml
+  vars:
+    source_host: "{{ item }}"
+  with_items: "{{ groups['source'] }}"
+  when: hostvars['{{ item }}'].services_to_enable != []
+
+- name: Shift application into a container
+  include: shift.yml
+  vars:
+    source_host: "{{ item }}"
+  with_items: "{{ groups['source'] }}"
+  when: hostvars['{{ item }}'].services_to_enable != []

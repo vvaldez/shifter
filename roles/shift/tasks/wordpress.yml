@@ -1,0 +1,31 @@
+---
+- name: Copy template Dockerfile
+  template:
+    src: wordpress-Dockerfile.j2
+    dest: ~/{{ container_name }}/Dockerfile
+
+- name: Copy foreground.sh
+  copy:
+    src: wordpress-foreground.sh
+    dest: ~/{{ container_name }}/foreground.sh
+
+- name: Copy start.sh
+  template:
+    src: wordpress-start.sh.j2
+    dest: ~/{{ container_name }}/start.sh
+
+- name: Copy supervisord.conf
+  copy:
+    src: wordpress-supervisord.conf
+    dest: ~/{{ container_name }}/supervisord.conf
+
+
+- name: Copy wordpress tarball
+  copy:
+    src: /tmp/{{ hostvars[source_host].profile }}-{{ source_host }}.tar.gz
+    dest: ~/{{ container_name }}/{{ hostvars[source_host].profile }}-{{ source_host }}.tar.gz
+
+- name: Copy wordpress database
+  copy:
+    src: /tmp/{{ hostvars[source_host].profile }}-{{ source_host }}.sql
+    dest: ~/{{ container_name }}/{{ hostvars[source_host].profile }}-{{ source_host }}.sql

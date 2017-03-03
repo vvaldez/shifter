@@ -1,4 +1,0 @@
----
-# tasks file for containerize
-- debug:
-    var: hostvars[source_host].services_to_enable

@@ -1,0 +1,11 @@
+---
+- name: Create container on destination host
+  command: docker build -t {{ container_name }} ~/{{ container_name }}/
+  register: docker_build
+  when: not docker_use_remote
+
+- name: Run new container
+  command: atomic run {{ container_name }}
+  register: atomic_run
+  when: not docker_use_remote
+

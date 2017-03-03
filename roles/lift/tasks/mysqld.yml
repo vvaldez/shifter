@@ -1,0 +1,18 @@
+---
+- name: Install MySQL-python if needed
+  package:
+    name: MySQL-python
+    state: present
+
+- name: Dump {{ profile }} mysql database
+  mysql_db:
+    login_user: "{{ mysql_user }}"
+    login_password: "{{ mysql_password }}"
+    state: dump
+    name: all
+    target: /tmp/{{ profile }}-{{ inventory_hostname }}.sql
+
+- name: Fetch {{ profile }} database
+  fetch:
+    src: /tmp/{{ profile }}-{{ inventory_hostname }}.sql
+    dest: /tmp/{{ profile }}-{{ inventory_hostname }}.sql
