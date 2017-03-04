@@ -1,57 +1,52 @@
 ---
-# tasks file for introspect
-- name: Check for running services
-  command: service {{ service }} status
-  with_items: "{{ services_to_check }}"
-  register: services_to_check_status
-  ignore_errors: yes
+- set_fact:
+    profiles_with_matching_services: []
+
+- name: Match running services to defined application profiles
+  include: services.yml
+  with_items: "{{ profiles }}"
   loop_control:
-    loop_var: service
+    loop_var: profile
 
-- name: Determine running services
-  debug:
-    msg: "Service {{ result.service }} found enabled"
-    verbosity: 1
-  with_items: "{{ services_to_check_status.results }}"
-  when: not result.failed | default(None)
+- set_fact:
+    profiles_with_matching_packages: []
+
+- name: Match installed packages to defined application profiles
+  include: packages.yml
+  with_items: "{{ profiles }}"
   loop_control:
-    loop_var: result
+    loop_var: profile
 
-- name: Initialize list of services to enable
-  set_fact:
-    services_to_enable: []
+- set_fact:
+    profiles_with_matching_files: []
 
-- name: Create list with services to enable
-  set_fact:
-    services_to_enable: "{{ services_to_enable }} + [ '{{ result.service }}' ]"
-  with_items: "{{ services_to_check_status.results }}"
-  when: not result.failed | default(None)
+- name: Match files to defined application profiles
+  include: files.yml
+  with_items: "{{ profiles }}"
   loop_control:
-    loop_var: result
+    loop_var: profile
 
-- name: Exit if no services were detected
-  fail:
-    msg: "No services were detected running on the source host of {{ inventory_hostname }}. Nothing to do."
-  when: services_to_enable == []
+- set_fact:
+    profiles_with_matching_dirs: []
+
+- name: Match directories to defined application profiles
+  include: dirs.yml
+  with_items: "{{ profiles }}"
+  loop_control:
+    loop_var: profile
+
+- name: Match profiles
+  include: match.yml
+  with_items: "{{ profiles }}"
+  loop_control:
+    loop_var: profile
 
 - debug:
-    var: services_to_enable
+    msg: "Matched profile is '{{ profile }}'"
+    verbosity: 1
+  when: profile is defined
 
-- name: Check for wordpress directory
-  command: grep -r "wp-admin/" /var/www/html/
-  register: wordpress_exists
-
-- name: Check for php-mysql
-  command: rpm -q php-mysql
-  register: php_mysql_installed
-
-- name: Set profile to wordpress
-  set_fact:
-    profile: "wordpress"
-  when:
-    - "'mysqld' in services_to_enable"
-    - "'httpd' in services_to_enable"
-    - wordpress_exists.rc == 0
-    - php_mysql_installed.rc == 0
-
-# To do - other introspection to determine additional profiles
+- name: Exit if no profiles were matched
+  fail:
+    msg: "No profiles were matched on source host of {{ inventory_hostname }}. Nothing to do."
+  when: profile is not defined

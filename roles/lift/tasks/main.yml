@@ -1,11 +1,12 @@
 ---
-# tasks file for lift
 - debug:
-    var: "{{ item }}"
-  with_items: 
-    - services_to_enable
-    - profile
+    msg: "Profile '{{ profile }}' lifting '{{ item }}'"
+    verbosity: 2
+  with_items: "{{ profiles }}"
+  when:
+    - "'{{ item.name }}' == '{{ profile }}'"
+    - profile is defined
 
 - name: Prep for lifting of application
   include: lift.yml
-  when: services_to_enable != []
+  when: profile is defined

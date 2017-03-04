@@ -1,0 +1,66 @@
+---
+- debug:
+    msg: "Introspecting profile '{{ profile.name }}' for package '{{ item }}'"
+    verbosity: 1
+  with_items: "{{ profile.packages }}"
+
+- name: Check for detected packages
+  command: rpm -q {{ package }}
+  with_items: "{{ profile.packages }}"
+  register: packages_status
+  ignore_errors: yes
+  loop_control:
+    loop_var: package
+
+- name: Determine detected packages
+  debug:
+    msg: "package {{ result.package }} found enabled"
+    verbosity: 1
+  with_items: "{{ packages_status.results }}"
+  when: not result.failed | default(None)
+  loop_control:
+    loop_var: result
+
+- name: Initialize list of packages detected
+  set_fact:
+    packages_detected: []
+
+- name: Create list with packages detected
+  set_fact:
+    packages_detected: "{{ packages_detected }} + [ '{{ result.package }}' ]"
+  with_items: "{{ packages_status.results }}"
+  when: not result.failed | default(None)
+  loop_control:
+    loop_var: result
+
+- debug:
+    var: packages_detected
+    verbosity: 2
+
+- debug:
+    var: profiles_with_matching_packages
+    verbosity: 2
+
+- name: Append current profile upon empty list and a match
+  set_fact: 
+    profiles_with_matching_packages: ["{{ profile.name }}"]
+  when: 
+    - profile.packages | difference(packages_detected) == []
+    - profiles_with_matching_packages == []
+    - not packages_detected == []
+
+- name: Append current profile with other matched profiles
+  set_fact:
+    profiles_with_matching_packages: "{{ profile_match }} + [ '{{ profile.name }}' ]"
+  with_items: profiles_with_matching_packages
+  when:
+    - profile.packages | difference(packages_detected) == []
+    - profiles_with_matching_packages != []
+    - profile_match == profile.name
+    - not packages_detected == []
+  loop_control:
+    loop_var: profile_match
+
+- debug:
+    var: profiles_with_matching_packages
+    verbosity: 2

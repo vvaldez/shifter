@@ -1,9 +1,7 @@
 ---
 - debug:
-    var: hostvars[source_host].services_to_enable
-
-- debug:
     var: hostvars[source_host].profile
+    verbosity: 2
 
 - name: Set container version
   set_fact:
@@ -28,19 +26,13 @@
   set_fact:
     container_name: "{{ 'shifted_from_' + source_host }}"
 
-#- name: Prepend used services
-#  set_fact:
-#    container_name: "{{ [service_name,container_name | default('')] | join('_') }}"
-#  with_items: "{{ hostvars[source_host].services_to_enable }}"
-#  loop_control:
-#    loop_var: service_name
-
 - name: Combine collected facts to create container name
   set_fact:
     container_name: "{{ os_name + os_major_version + '_' + hostvars[source_host].profile + '_' + container_name }}"
 
 - debug:
     var: container_name
+    verbosity: 2
 
 - name: Create directory to hold Dockerfile
   file:

@@ -1,0 +1,66 @@
+---
+- debug:
+    msg: "Introspecting profile '{{ profile.name }}' for file '{{ item }}'"
+    verbosity: 1
+  with_items: "{{ profile.files }}"
+
+- name: Check for detected files
+  command: ls {{ file }}
+  with_items: "{{ profile.files }}"
+  register: files_status
+  ignore_errors: yes
+  loop_control:
+    loop_var: file
+
+- name: Determine detected files
+  debug:
+    msg: "file {{ result.file }} found enabled"
+    verbosity: 1
+  with_items: "{{ files_status.results }}"
+  when: not result.failed | default(None)
+  loop_control:
+    loop_var: result
+
+- name: Initialize list of files detected
+  set_fact:
+    files_detected: []
+
+- name: Create list with files detected
+  set_fact:
+    files_detected: "{{ files_detected }} + [ '{{ result.file }}' ]"
+  with_items: "{{ files_status.results }}"
+  when: not result.failed | default(None)
+  loop_control:
+    loop_var: result
+
+- debug:
+    var: files_detected
+    verbosity: 2
+
+- debug:
+    var: profiles_with_matching_files
+    verbosity: 2
+
+- name: Append current profile upon empty list and a match
+  set_fact: 
+    profiles_with_matching_files: ["{{ profile.name }}"]
+  when: 
+    - profile.files | difference(files_detected) == []
+    - profiles_with_matching_files == []
+    - not files_detected == []
+
+- name: Append current profile with other matched profiles
+  set_fact:
+    profiles_with_matching_files: "{{ profile_match }} + [ '{{ profile.name }}' ]"
+  with_items: profiles_with_matching_files
+  when:
+    - profile.files | difference(files_detected) == []
+    - profiles_with_matching_files != []
+    - profile_match == profile.name
+    - not files_detected == []
+  loop_control:
+    loop_var: profile_match
+
+- debug:
+    var: profiles_with_matching_files
+    verbosity: 2

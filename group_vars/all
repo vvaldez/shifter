@@ -8,21 +8,26 @@ docker_port: 2375
 docker_configure_remote: true
 docker_use_remote: true
 image_registry: "registry.access.redhat.com"
-services_to_check:
-  - mysqld
-  - named
-  - httpd
-  - postgresql
-  - nfs
-  - smb
-  - tomcat6
-  - smb
-  - nmb
-  - winbind
-  - squid
-  - dovecot
 profiles: 
-  - wordpress
-  - bind
-  - samba
-  - jboss
+  - name: wordpress
+    services:
+      - mysqld
+      - httpd
+    files: []
+    dirs:
+      - /var/www/html/
+    packages:
+      - php-mysql
+      - mysql
+      - mysql-server
+  - name: sample_custom_app
+    services:
+      - postgresql
+      - httpd
+    files: /etc/sample/sample.conf
+    dirs:
+      - /svr/sample/
+    packages:
+      - httpd
+      - postgresql-server
+      - postgresql
