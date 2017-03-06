@@ -2,12 +2,14 @@
 - name: Check docker config for remote listening option
   command: 'awk /"^OPTIONS=.*-H {{ inventory_hostname }}:{{ docker_port }}"/ /etc/sysconfig/docker'
   register: check_config
+  when: docker_configure_remote | default(False)
 
 - name: Set docker configuration fact if found 
   set_fact:
     docker_remote_configured: true
   when:
     - "'-H {{ inventory_hostname }}:{{ docker_port }}' in check_config.stdout"
+    - docker_configure_remote | default(False)
 
 - name: Configure remote Docker port
   lineinfile:
@@ -27,20 +29,26 @@
     - docker_configure_remote | default(False)
     - not docker_remote_configured | default(False)
  
-- name: Pull and build docker image
+- name: Pull docker image
   docker_image: 
-  #name: "{{ os_name }}{{ os_major_version }}"
     name: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}"
-    repository: "{{ image_registry }}"
+    #repository: "{{ image_registry }}"
+    state: present
+    docker_host: "tcp://{{ inventory_hostname }}:{{ docker_port }}"
+    pull: true
+ 
+- name: Build docker image
+  docker_image: 
+    name: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}"
     state: present
     docker_host: "tcp://{{ inventory_hostname }}:{{ docker_port }}"
     path: "~/{{ container_name }}"
-    pull: true
+    tag: "{{ container_name }}"
  
 - name: Start docker container
   docker_container: 
     name: "{{ container_name }}"
-    image: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}"
+    image: "{{ image_registry }}/{{ os_name }}{{ os_major_version }}:{{ container_name }}"
     recreate: yes
     state: started
     docker_host: "tcp://{{ inventory_hostname }}:{{ docker_port }}"
@@ -50,4 +58,4 @@
     ports:
       - 80:80
     network_mode: bridge
-    command: "/start.sh"
+    #command: "/start.sh"

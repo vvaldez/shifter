@@ -3,9 +3,9 @@
   include: wordpress.yml
   when: "'{{ hostvars[source_host].profile }}' == 'wordpress'"
 
-- name: Run relevant profile tasks for bind
-  include: bind.yml
-  when: "'{{ hostvars[source_host].profile }}' == 'bind'"
+- name: Run relevant profile tasks for sample_custom_app
+  include: sample_custom_app.yml
+  when: "'{{ hostvars[source_host].profile }}' == 'sample_custom_app'"
 
 - name: Create container using command module
   include: with_command.yml

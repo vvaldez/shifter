@@ -1,0 +1,10 @@
+---
+maintainer_name: "Vinny Valdez"
+maintainer_email: "vvaldez@redhat.com"
+mysql_user: "root"
+mysql_password: "shifter"
+privileged: false
+docker_port: 2375
+docker_configure_remote: true
+docker_use_remote: true
+image_registry: "registry.access.redhat.com"

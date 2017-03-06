@@ -1,10 +1,7 @@
 ---
 - debug:
     var: hostvars['{{ item }}'].profile
-  with_items: "{{ groups['source'] }}"
-
-- debug:
-    var: hostvars['{{ item }}'].profile
+    verbosity: 2
   with_items: "{{ groups['source'] }}"
 
 - name: Prep for containerization shift

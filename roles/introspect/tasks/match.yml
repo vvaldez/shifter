@@ -1,6 +1,7 @@
 ---
 - debug:
     msg: "Matching profile '{{ profile.name }}' in '{{ item }}'"
+    verbosity: 2
   with_items:
     - "'{{ profiles_with_matching_services }}'"
     - "'{{ profiles_with_matching_packages }}'"
@@ -13,7 +14,7 @@
   when:
     - "'{{ profile.name }}' in profiles_with_matching_services"
     - "'{{ profile.name }}' in profiles_with_matching_packages"
-#    - "'{{ profile.name }}' in profiles_with_matching_files"
+    - "'{{ profile.name }}' in profiles_with_matching_files"
     - "'{{ profile.name }}' in profiles_with_matching_dirs"
 
 - debug:

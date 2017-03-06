@@ -47,7 +47,6 @@
   when: 
     - profile.packages | difference(packages_detected) == []
     - profiles_with_matching_packages == []
-    - not packages_detected == []
 
 - name: Append current profile with other matched profiles
   set_fact:
@@ -57,7 +56,6 @@
     - profile.packages | difference(packages_detected) == []
     - profiles_with_matching_packages != []
     - profile_match == profile.name
-    - not packages_detected == []
   loop_control:
     loop_var: profile_match
 

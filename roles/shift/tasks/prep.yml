@@ -24,11 +24,7 @@
 
 - name: Set container name
   set_fact:
-    container_name: "{{ 'shifted_from_' + source_host }}"
-
-- name: Combine collected facts to create container name
-  set_fact:
-    container_name: "{{ os_name + os_major_version + '_' + hostvars[source_host].profile + '_' + container_name }}"
+    container_name: "{{ hostvars[source_host].profile + '_' + 'shifted_from_' + source_host }}"
 
 - debug:
     var: container_name

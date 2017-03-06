@@ -3,8 +3,8 @@
   include: wordpress.yml
   when: "'{{ profile }}' == 'wordpress'"
 
-- name: Call tasks for bind lift
-  include: bind.yml
-  when: "'{{ profile }}' == 'bind'"
+- name: Call tasks for custom_sample_app lift
+  include: custom_sample_app.yml
+  when: "'{{ profile }}' == 'custom_sample_app'"
 
 # other tasks for additional apps ...

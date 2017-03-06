@@ -1,11 +1,15 @@
 ---
 - name: Profile source hosts
   hosts: source
+  vars_files:
+    - inventory/profiles.yml
   roles:
     - { role: introspect, when: perform_introspection | default (True) }
     - role: lift
 
 - name: Build container and migrate application to target container host
   hosts: destination
+  vars_files:
+    - inventory/profiles.yml
   roles:
     - role: shift
