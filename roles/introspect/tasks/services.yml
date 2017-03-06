@@ -1,10 +1,10 @@
 ---
 - debug:
-    msg: "Introspecting profile '{{ profile.name }}' for service '{{ item }}'"
+    msg: "{{ profile.name }} | Introspecting for service '{{ item }}'"
     verbosity: 1
   with_items: "{{ profile.services }}"
 
-- name: Check for detected services
+- name: "{{ profile.name }} | Check for detected services"
   command: service {{ service }} status
   with_items: "{{ profile.services }}"
   register: services_status
@@ -12,7 +12,7 @@
   loop_control:
     loop_var: service
 
-- name: Determine detected services
+- name: "{{ profile.name }} | Determine detected services"
   debug:
     msg: "Service {{ result.service }} found enabled"
     verbosity: 1
@@ -21,11 +21,11 @@
   loop_control:
     loop_var: result
 
-- name: Initialize list of services detected
+- name: "{{ profile.name }} | Initialize list of services detected"
   set_fact:
     services_detected: []
 
-- name: Create list with services detected
+- name: "{{ profile.name }} | Create list with services detected"
   set_fact:
     services_detected: "{{ services_detected }} + [ '{{ result.service }}' ]"
   with_items: "{{ services_status.results }}"
@@ -41,14 +41,14 @@
     var: profiles_with_matching_services
     verbosity: 2
 
-- name: Append current profile upon empty list and a match
+- name: "{{ profile.name }} | Append current profile upon empty list and a match"
   set_fact: 
     profiles_with_matching_services: ["{{ profile.name }}"]
   when: 
     - profile.services | difference(services_detected) == []
     - profiles_with_matching_services == []
 
-- name: Append current profile with other matched profiles
+- name: "{{ profile.name }} | Append current profile with other matched profiles"
   set_fact:
     profiles_with_matching_services: "{{ profile_match }} + [ '{{ profile.name }}' ]"
   with_items: profiles_with_matching_services

@@ -1,10 +1,10 @@
 ---
 - debug:
-    msg: "Introspecting profile '{{ profile.name }}' for dir '{{ item }}'"
+    msg: "{{ profile.name }} | Introspecting for dir '{{ item }}'"
     verbosity: 1
   with_items: "{{ profile.dirs }}"
 
-- name: Check for detected dirs
+- name: "{{ profile.name }} | Check for detected dirs"
   command: ls -d {{ dir }}
   with_items: "{{ profile.dirs }}"
   register: dirs_status
@@ -12,7 +12,7 @@
   loop_control:
     loop_var: dir
 
-- name: Determine detected dirs
+- name: "{{ profile.name }} | Determine detected dirs"
   debug:
     msg: "dir {{ result.dir }} found enabled"
     verbosity: 1
@@ -21,11 +21,11 @@
   loop_control:
     loop_var: result
 
-- name: Initialize list of dirs detected
+- name: "{{ profile.name }} | Initialize list of dirs detected"
   set_fact:
     dirs_detected: []
 
-- name: Create list with dirs detected
+- name: "{{ profile.name }} | Create list with dirs detected"
   set_fact:
     dirs_detected: "{{ dirs_detected }} + [ '{{ result.dir }}' ]"
   with_items: "{{ dirs_status.results }}"
@@ -41,14 +41,14 @@
     var: profiles_with_matching_dirs
     verbosity: 2
 
-- name: Append current profile upon empty list and a match
+- name: "{{ profile.name }} | Append current profile upon empty list and a match"
   set_fact: 
     profiles_with_matching_dirs: ["{{ profile.name }}"]
   when: 
     - profile.dirs | difference(dirs_detected) == []
     - profiles_with_matching_dirs == []
 
-- name: Append current profile with other matched profiles
+- name: "{{ profile.name }} | Append current profile with other matched profiles"
   set_fact:
     profiles_with_matching_dirs: "{{ profile_match }} + [ '{{ profile.name }}' ]"
   with_items: profiles_with_matching_dirs
