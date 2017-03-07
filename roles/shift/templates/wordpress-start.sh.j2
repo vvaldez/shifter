@@ -55,6 +55,8 @@ echo $WORDPRESS_PASSWORD > /wordpress-db-pw.txt
 __httpd_config() {
 chown -R apache:apache /var/www/html/
 tar zxf /tmp/{{ hostvars[source_host].profile }}-{{ source_host }}.tar.gz/{{ source_host }}/tmp/{{ hostvars[source_host].profile }}-{{ source_host }}.tar.gz -C /var/www/html/
+echo "define('WP_HOME','http://{{ inventory_hostname }}/wp');" >> /var/www/html/wp/wp-config.php
+echo "define('WP_SITEURL','http://{{ inventory_hostname }}/wp');" >> /var/www/html/wp/wp-config.php
 }
 
 __start_mysql() {
