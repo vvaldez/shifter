@@ -1,0 +1,25 @@
+---
+- hosts: source
+  vars:
+    profile:
+      name: test_app
+      services: 
+        - iptables
+        - smbd
+        - sshd
+  tasks:
+    - debug:
+        msg: "{{ profile.name }} | Introspecting for service '{{ item }}'"
+        verbosity: 1
+      with_items: "{{ profile.services }}"
+    
+    - name: "{{ profile.name }} | Check for detected services"
+      command: service {{ service }} status
+      with_items: "{{ profile.services }}"
+      register: services_status
+      ignore_errors: yes
+      loop_control:
+        loop_var: service
+    - debug:
+        var: services_status
+        verbosity: 1
