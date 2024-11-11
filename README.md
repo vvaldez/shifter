@@ -33,5 +33,8 @@ To use the included wordpress lift and shift profile, create a simple wordpress 
 
 Be sure to substitute **mysql** for **mariadb**. The database and wordpress password are set in the **roles/shift/templates/wordpress-start.sh** and hard coded as **shifter** but can be easily made dynamic via a variable.
 
+## Demo
+Video demo: https://www.youtube.com/watch?v=BRAUEcLV2sg
+
 ## Future Plans
 I hope to add more example application profiles, include some middleware examples and target OpenShift as a destination.
